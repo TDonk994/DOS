@@ -1,7 +1,7 @@
 # WPA2-DOS
-this script is for educational purposes only
-I am not responsible for any damage caused by this script
-this is for testing your own network or someone else's network with PERMISSION
+this script is for educational purposes only.
+I am not responsible for any damage caused by this script.
+this is for testing your own network or someone else's network with PERMISSION.
 
     these current attacks only work on WPA & WPA2 APs.
     Currently don't have a way to make sure that the AP is real. Will probably add that later, so make sure you spell its name correctly.
