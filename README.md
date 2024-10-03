@@ -16,7 +16,7 @@ Currently don't have a way to make sure that the AP is real. Will probably add t
 
 this script assumes you have a wireless adapter with monitor mode and the correct drivers installed
 if you don't atleast have those this won't work.
-might add a way to check later but unlikly
+might add a way to check later but unlikely
 
 # requirements -- *what I could think of*
     -Wireless Adapter or wireless card that can use monitor mode
