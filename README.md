@@ -1,5 +1,5 @@
 # WPA2-DOS
-this script is for educational purposes only.
+This script is for educational purposes only.
 I am not responsible for any damage caused by this script.
 this is for testing your own network or someone else's network with PERMISSION.
 
@@ -13,9 +13,10 @@ Currently don't have a way to make sure that the AP is real. Will probably add t
     -the option to target multiple APs
     -other type of attacks and packages
     -clean up the script to function better
+    -functions
 
 this script assumes you have a wireless adapter with monitor mode and the correct drivers installed
-if you don't atleast have those this won't work.
+if you don't at least have those this won't work.
 might add a way to check later but unlikely
 
 # requirements -- *what I could think of*
