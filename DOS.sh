@@ -1,13 +1,14 @@
 #!/bin/bash
 
 #this script is for educational purposes only
-#I am not responsible for any damage caused by this script
-#this script is for testing your own network or someone else's network with permission
+#I am not responsible for any damage caused by its use
+#this script is for testing your own network or someone else's network *WITH PERMISSION*
 
-#this script is a DOS attack for WPA2 APS
+#this script is for auditing WPA2 APs
 #by: TDonk994
 
-#last commit date: 10/02/2024
+#last commit date: 11/20/2024
+
 
 
 
@@ -75,9 +76,6 @@ if [ $aircrackCheck == "false" ]; then
 else
     echo "aircrack-ng is installed"
 fi
-sudo cd Desktop
-#user input for a AP's name
-read -p "Enter the AP's name: " AP
 sleep 1
 #setting up the wireless adapter and other stuff that might interfere with the attack
 echo "setting up the wireless adapter/interfaces"
