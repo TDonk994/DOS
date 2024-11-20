@@ -7,6 +7,7 @@
 #this script is for auditing WPA2 APs
 #by: TDonk994
 
+#start date: 10/02/2024
 #last commit date: 11/20/2024
 
 
@@ -116,7 +117,7 @@ Clears_CSV() {
 For_aireplay () {
     echo "setting up aireplay-ng deauth attack"
     #deletes the files if they exist so no duplicates
-    #also recommend to use the desktop directory for this
+    #also recommend to use the desktop directory for this for testing
     Clears_CSV
     sleep 1
     echo "starting airodump-ng to find APs, this will take 30 seconds"
