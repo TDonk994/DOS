@@ -339,7 +339,8 @@ For_Auth_Flood () {
     sleep 1
     echo "would you like to scan for APs or do you already know its MAC address?"
     while true; do
-        read -p "1) Scan for APs\n2) Already know MAC address\n3) Exi\n4) Return: " choice
+        echo -e "1) Scan for APs\n2) Already know MAC address\n3) Exi\n4) Return"
+        read -p "what's your choice: " choice
         if [ $choice == 1 ]; then
             Just_Analysis
             cat bssid1.csv | awk '{print $3}'
