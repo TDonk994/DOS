@@ -8,7 +8,7 @@
 #by: TDonk994
 
 #start date: 10/02/2024
-#last commit date: 11/20/2024
+#last commit date: 11/24/2024
 
 
 
@@ -144,9 +144,10 @@ For_aireplay () {
             Just_Deauth_lyer2 $channelused $usedbssid
             continue
         elif [ $choice == 2 ]; then
+            cat bssid.csv | awk '{print $3}'
             read -p "which AP(use the name)?: " AP
             echo "you chose $AP"
-            cat bssid.csv | grep $AP > bssid2.csv
+            cat bssid.csv | grep "$AP" > bssid2.csv
             numberofbssid=$(cat bssid2.csv | wc -l)
             if [ $numberofbssid == 1 ]; then
                 usedbssid=$(cat bssid2.csv | awk '{print $1}')
@@ -262,7 +263,7 @@ For_Analysis () {
                 cat bssid.csv | awk '{print $3}'
                 read -p "which AP(use the name)?: " AP
                 echo "you chose $AP"
-                cat bssid.csv | grep $AP > bssid2.csv
+                cat bssid.csv | grep "$AP" > bssid2.csv
                 numberofbssid=$(cat bssid2.csv | wc -l)
                 if [ $numberofbssid == 1 ]; then
                     usedbssid=$(cat bssid2.csv | awk '{print $1}')
@@ -347,7 +348,7 @@ For_Auth_Flood () {
             read -p "which AP?: " AP
             echo "you chose $AP"
             # now confirm the AP exists
-            cat bssid1.csv | grep $AP > bssid2.csv
+            cat bssid1.csv | grep "$AP" > bssid2.csv
             numberofbssid=$(cat bssid2.csv | wc -l)
             if [ $numberofbssid == 1 ]; then
                 usedbssid=$(cat bssid2.csv | awk '{print $1}')
@@ -409,7 +410,7 @@ For_WPA2_Crack () {
     cat bssid.csv | awk '{print $3}'
     read -p "which AP (use the name)?: " AP
     echo "you chose $AP"
-    cat bssid.csv | grep $AP > bssid2.csv
+    cat bssid.csv | grep "$AP" > bssid2.csv
     usedbssid=$(cat bssid2.csv | awk '{print $1}')
     channelused=$(cat bssid2.csv | awk '{print $2}')
     while true; do
@@ -460,7 +461,7 @@ For_Layer1_Deauth () {
     echo "you chose Layer 1 Deauth"
     read -p "Enter interface (monitor mode) you wish to use for the attack: " interface
     while true; do
-        read -p "frequencey band(1) or channel(2) or exit(anything else) you wish to use: " OP
+        read -p "frequencey band(1), channel(2), Return(3) or exit(anything else) you wish to use: " OP
         if [ $OP == 1 ]; then
             read -p "Enter frequencey band you wish to use (2.4 or 5): " band
             if [ $band == 2.4 ]; then
@@ -473,6 +474,9 @@ For_Layer1_Deauth () {
             fi
         elif [ $OP == 2 ]; then
             read -p "Enter channel you wish to use: " channel
+        elif [ $OP == 3 ]; then
+            echo "returning"
+            break
         else
             echo "invalid input"
             continue
@@ -480,8 +484,8 @@ For_Layer1_Deauth () {
         iwconfig $interface channel $channel
         read -p "would you like to continue? (y/n): " continue
         if [ $continue == "n" ]; then
-            echo "exiting"
-            exit 1
+            echo "returning"
+            break
         else
             echo "continuing"
             for count in $(seq 1 2000)
@@ -493,8 +497,8 @@ For_Layer1_Deauth () {
                     echo "to cancel the attack, press ctrl c"
                     (iwconfig $interface b -b $band_op > /dev/null)&
                 else
-                    echo "invalid input22 exiting"
-                    exit 1
+                    echo "invalid input22 returning"
+                    break
                 fi
             done
         fi
