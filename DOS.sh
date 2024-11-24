@@ -143,18 +143,18 @@ For_aireplay () {
             channelused=$(cat bssid2.csv | awk '{print $2}')
             Just_Deauth_lyer2 $channelused $usedbssid
             continue
-        elif [ $choice == 2 ]; then
-            cat bssid.csv | awk '{print $3}'
+        elif [ $choice == 2 ]; then #Works
+            cat bssid.csv | awk '{print $3, $4}' | sort
             read -p "which AP(use the name)?: " AP
             echo "you chose $AP"
             cat bssid.csv | grep "$AP" > bssid2.csv
             numberofbssid=$(cat bssid2.csv | wc -l)
-            if [ $numberofbssid == 1 ]; then
+            if [ $numberofbssid == 1 ]; then #Works
                 usedbssid=$(cat bssid2.csv | awk '{print $1}')
                 channelused=$(cat bssid2.csv | awk '{print $2}')
                 Just_Deauth_lyer2 $channelused $usedbssid
                 continue
-            else
+            else #Works
                 echo "more than one AP with that name, please use the MAC address"
                 cat bssid2.csv | awk '{print}'
                 read -p "Enter the AP's MAC address: " MAC
@@ -165,13 +165,13 @@ For_aireplay () {
                 Just_Deauth_lyer2 $channelused $usedbssid
                 continue
             fi
-        elif [ $choice == 3 ]; then
+        elif [ $choice == 3 ]; then #Works
             echo "exiting"
             exit 1
-        elif [ $choice == 4 ]; then
+        elif [ $choice == 4 ]; then #Works
             echo "returning"
             break
-        else
+        else #Works
             echo "invalid input:("
             continue
         fi
@@ -233,7 +233,7 @@ For_mdk4 () {
 For_Analysis () {
     read -p "do you want to continue with nearby AP analysis? (y/n): " For
     if [ $For == "n" ]; then
-        echo "exiting"
+        echo "returning"
         break
     else
         echo "continuing"
@@ -250,7 +250,7 @@ For_Analysis () {
             echo "you chose Layer 2 Deauth"
             read -p "MAC(1) or Name(2)?: " choice
             if [ $choice == 1 ]; then
-                cat bssid.csv | awk '{print $1 , $3}'
+                cat bssid.csv | awk '{print $1 , $3}' | sort
                 read -p "Enter the AP's MAC address: " MAC
                 echo "you chose $MAC"
                 cat bssid.csv | grep $MAC > bssid2.csv
@@ -295,30 +295,10 @@ For_Analysis () {
             continue
         elif [ $attack2 == 5 ]; then
             echo "you chose metrics"
-            while true; do
-                echo -e "Metrics:\n1) Number of APs\n2) Number of clients\n3) number of APs/Clients on a channel\n4) Exit\n5) Return"
-                read -p "what's your choice: " metrics
-                if [ $metrics == 1 ]; then
-                    echo "Number of APs: $(cat bssid.csv | wc -l)"
-                    continue
-                elif [ $metrics == 2 ]; then
-                    echo "Number of clients: $(cat bssid.csv | awk '{print $3}' | awk '{s+=$1} END {print s}')"
-                    continue
-                elif [ $metrics == 3 ]; then
-                    echo "Number of APs/Clients on a channel"
-                    cat bssid.csv | awk '{print $2}' | sort | uniq -c
-                    continue
-                elif [ $metrics == 4 ]; then
-                    echo "exiting"
-                    exit 1
-                elif [ $metrics == 5 ]; then
-                    echo "returning"
-                    break
-                else
-                    echo "invalid input, try again"
-                    continue
-                fi
-            done
+            echo "metrics are not available at this time"
+            sleep 1
+            echo "returning"
+            break
         elif [ $attack2 == 6 ]; then
             echo "exiting"
             exit 1
@@ -517,17 +497,17 @@ Just_Deauth_lyer2 () { #edit the core function Layer 2 deauth here
 
 Just_Filter () { #edit the core function of filtering the CSVs here
     echo "filtering the APs"
-    cat bssid.csv | grep -v "BSSID" | awk -F ',' '{print $1, $4, $14}' | sed 's/,//g' > bssid1.csv
+    cat wlan0-01.csv | grep -v "BSSID" | awk -F ',' '{print $1, $4, $14}' | sed 's/,//g' > bssid.csv
     #cat bssid1.csv | awk '{print $1, $6, $19}' > bssid.csv
 
 }
 
-while true; do
+while true; do #Main menu
     echo -e "Which do you want to use?\n1) Layer 2 Deauth\n2) Random SSID beacon flood\n3) Chosen fake SSID beacon flood\n4) Nearby AP analysis\n5) Auth Flood\n6) Layer 1 Deauth\n7) WPA2 Crack\n8) Exit"
     sleep 1
     read -p "what's your choice: " attack 
     if [ $attack == 1 ]; then
-        For_aireplay
+        For_aireplay #works
         continue
     elif [ $attack == 2 ]; then
         For_mdk3
