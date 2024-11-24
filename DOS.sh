@@ -171,6 +171,7 @@ For_mdk3 () {
         read -p "which channel do you want to flood?: " channel
         if [[ -n ${channel//[0-9]/} ]]; then
             echo "invalid input"
+            continue
         else
             echo "you chose channel $channel"
             echo "starting mdk3 channel becon flood"
@@ -188,9 +189,10 @@ For_mdk4 () {
     read -p "which SSID/name do you want to use?: " SSID
     echo "your fake AP is $SSID"
     while true; do
-    read -p "which channel do you want to use?: " channel
+        read -p "which channel do you want to use?: " channel
         if [[ -n ${channel//[0-9]/} ]]; then
-        echo "invalid input"
+            echo "invalid input"
+            continue
         else 
             echo "chosen channel is $channel"
             echo "starting mdk4 fake SSID beacon flood"
@@ -270,6 +272,7 @@ For_Auth_Flood () {
             exit 1
         else
             echo "invalid input"
+            continue
         fi
 
 }
@@ -372,7 +375,7 @@ For_Layer1_Deauth () {
         fi
     done
 }
-whitelist=$1
+
 while true; do
     echo -e "Which do you want to use?\n1) Layer 2 Deauth\n2) Random SSID beacon flood\n3) Chosen fake SSID beacon flood\n4) Nearby AP analysis\n5) Auth Flood\n6) Layer 1 Deauth\n7) WPA2 Crack\n8) Exit"
     sleep 1
