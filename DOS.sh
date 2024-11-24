@@ -186,8 +186,8 @@ Just_Analysis () { #edit the core function of analysis here
     echo "starting airodump-ng to find APs, this will take 30 seconds"
     sudo timeout 30 airodump-ng -b abg wlan0 --write wlan0 --output-format csv
     sleep 2
-    cat wlan0-01.csv | sed 's/,//g' > bssid1.csv
-    cat bssid1.csv | awk '{print $1, $6, $19}' > bssid.csv
+    cat wlan0-01.csv | grep -v "BSSID" | awk -F ',' '{print $1, $4, $14}' | sed 's/,//g' > bssid.csv
+    #cat bssid1.csv | awk '{print $1, $6, $19}' > bssid.csv
 }
 
 For_mdk3 () {
