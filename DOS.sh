@@ -312,7 +312,7 @@ For_Analysis () { #works
     done
 }
 
-For_Auth_Flood () {
+For_Auth_Flood () { #worksk
     echo "you chose Auth Flood"
     sleep 1
     echo "this auth flood will use mkd4"
@@ -398,7 +398,8 @@ For_WPA2_Crack () {
             EAPOL_Capture $channelused $usedbssid
             continue
         elif [ $choice == 2 ]; then
-            EAPOL_Capture_Deauth $channelused $usedbssid
+            #EAPOL_Capture_Deauth $channelused $usedbssid
+            echo "not available at this time"
             continue
         elif [ $choice == 3 ]; then
             echo "exiting"
@@ -486,7 +487,7 @@ For_Layer1_Deauth () {
             elif [ $band_op == "2.4G" ]; then
                 echo "starting mdk4 Layer 1 Deauth on 2.4G"
                 echo "cancel the attack early with ctrl c"
-                for i in {1..14}; do
+                for i in $(seq 1 11); do
                     sudo mdk4 wlan0 b -c $i -h 2.4
                 done
             else
